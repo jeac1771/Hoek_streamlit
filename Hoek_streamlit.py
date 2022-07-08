@@ -30,7 +30,7 @@ from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 
 
-st.title("Visualización de UG")
+st.title("Visualización de ajuste por envolvente Hoek-Brown")
 
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
@@ -82,7 +82,7 @@ if uploaded_file is not None:
     
     if len(df_v2) > 1 :
     
-        def patatab (df):
+        def patlist(df):
             for row in df['SigmaS1']:
                 listaa.append(row)
             for row in df['SigmaS3']:
@@ -90,7 +90,7 @@ if uploaded_file is not None:
             for i in range(len(listaa)):
                 esfuerzos.append([listab[i],listaa[i]])
                 
-        patatab(df_v2)
+        patlist(df_v2)
         zip(*esfuerzos)
         
     
