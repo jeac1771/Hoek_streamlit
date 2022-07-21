@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Sep 29 13:07:05 2019
+Created on Wed Jul 20 19:38:03 2022
 
 @author: Jorge Alvarez Correa
 """
@@ -13,13 +13,11 @@ Created on Sun Sep 29 13:07:05 2019
 ## pip install streamlit-aggrid
 
 ## para ejecutar:
-## streamlit run c:\users\jalvarez\desktop\AppMLJEACv4.py [ARGUMENTS]
+## streamlit run c:\users\jalvarez\desktop\str_hoek.py [ARGUMENTS]
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-#from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.optimize import curve_fit
 import scipy as sy
 from numpy import sqrt
@@ -31,6 +29,15 @@ from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 
 st.title("Visualización de ajuste por envolvente Hoek-Brown")
+
+st.markdown('***Descripción de los datos***: Los datos requeridos para la siguiente aplicación corresponden a ensayos de laboratorio realizados en probetas de roca intacta. Los ensayos realizados corresponden a dos tipos escencialmente:')
+st.markdown('*  ***Uniaxiales***: Son llevados a cabo sin un confinamiento')
+st.markdown('*  ***Triaxiales***: Son llevados a cabo con un confinamiento')
+st.markdown('Para ambos tipos de ensayos de laboratorio se posee el confinamiento utilizado (esfuerzo principal menor) y presión inducida (esfuerzo principal mayor). Conociendo ambas presiones, es posible determinar una envolvente característica conocida como la envolvente de falla Hoek-Brown, la cual modela el comportamiento resistente de la roca intacta.')
+
+st.markdown('La siguiente visualización busca desplegar los ensayos utilizados así como tambien el ajuste realizado por esta envolvente característica')
+
+st.markdown('El publico objetivo corresponde principalmente a geologos, ingenieros en minas, ingenieros geotecnicos o geomecanicos entre otros.')
 
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
@@ -48,9 +55,9 @@ if uploaded_file is not None:
     esfuerzos = []*len(clasificar_j['SigmaS1'])
     
     gb = GridOptionsBuilder.from_dataframe(clasificar_j)
-    gb.configure_pagination(paginationAutoPageSize=True) #Add pagination
-    gb.configure_side_bar() #Add a sidebar
-    gb.configure_selection('multiple', use_checkbox=True, groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
+    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_side_bar()
+    gb.configure_selection('multiple', use_checkbox=True, pre_selected_rows = list(range(len(clasificar_j))), groupSelectsChildren="Group checkbox select children") #Enable multi-row selection
     gridOptions = gb.build()
 
     grid_response = AgGrid(
@@ -59,7 +66,7 @@ if uploaded_file is not None:
     data_return_mode='AS_INPUT', 
     update_mode='MODEL_CHANGED', 
     fit_columns_on_grid_load=False,
-    theme='blue', #Add theme color to the table
+    theme='blue',
     enable_enterprise_modules=True,
     height=350, 
     width='100%',
@@ -68,7 +75,7 @@ if uploaded_file is not None:
 
     data = grid_response['data']
     selected = grid_response['selected_rows'] 
-    df_v2 = pd.DataFrame(selected) #Pass the selected rows to a new dataframe df
+    df_v2 = pd.DataFrame(selected)
   
     print(len(df_v2))
 
@@ -185,7 +192,7 @@ if uploaded_file is not None:
         s3ficticio = [c*0.1 - 10 for c in range(400)]
         s1mogi = [a * 3.4 for a in s3ficticio]
         
-        ############################  Construcción grafico complejo ##############################
+        ############################  Construcción grafico para visualización ##############################
         
         filtrohist = []
         
@@ -195,20 +202,7 @@ if uploaded_file is not None:
                     filtrohist.append([listaa[i]])
         filtrocero()
         
-        
-        
-        def graf_porcategoria(a):
-        
-            sns.lmplot(x = 'SigmaS3', y = 'SigmaS1', 
-                       data = df_v2, 
-                       hue = a, 
-                       fit_reg = False)
-            plt.xlabel('SigmaS3')
-            plt.ylabel('SigmaS1')
-            plt.title('Relación Esfuerzos Categoría')
-            plt.show(block=False) # con este comando al compilar, los graficos funcionan correctamente.
-            
-        
+
         def filtermogi(a):
         
             for i in range(len(a['SigmaS3'])):
@@ -220,27 +214,20 @@ if uploaded_file is not None:
         s3boxplot = [c*5  for c in range(9)]
         boxlist1=[]
         
-        def filter_hoekplotall_label(a, b, c, d, e, j, h, l, m, z): ### PENDIENTE: INCLUIR PLOT LABEL CON ALLRESULTS
+        def filter_hoekplotall_label(a, b, c, d, e, j, h, l, m, z): ### Grafica Inicial
         
-            # First, create the figure
             fig = plt.figure(1, figsize=(15,8))
     
-            # Now, create the gridspec structure, as required
             gs = gridspec.GridSpec(1,5, height_ratios=[1], width_ratios=[0.2,0.2,1,0.02,0.58])
     
-            # 3 rows, 4 columns, each with the required size ratios. 
-            # Also make sure the margins and spacing are apropriate
     
             gs.update(left=0.05, right=0.95, bottom=0.08, top=0.93, wspace=0.02, hspace=0.03)
     
-            # First, the scatter plot
-            # Use the gridspec magic to place it
             # --------------------------------------------------------
-            ax1 = plt.subplot(gs[0,2]) # place it where it should be.
+            ax1 = plt.subplot(gs[0,2]) # lugar del grafico
             # --------------------------------------------------------
             
-            # The plot itself
-            ax1.scatter(a, b,color='darkorange',alpha=0.8,label='Esfuerzos (Mpa) - Filter', s = 70)
+            ax1.scatter(a, b,color='darkorange',alpha=0.8,label='Esfuerzos (Mpa) - Filtrados', s = 70)
             ax1.scatter(c, d,color='blue',alpha=0.7,label='Esfuerzos (Mpa)', s = 70)
             ax1.plot(s3ficticio,hoekgraph(s3ficticio, *e),'r-',label='Fit: $\sigma_{ci}$=%.0f, $m_i$=%.0f' % tuple(e))
             ax1.plot(s3ficticio, s1mogi ,'--', color= "gray", label='Línea de Mogi')
@@ -254,30 +241,25 @@ if uploaded_file is not None:
             #                         xytext=(10,-5), textcoords='offset points',
             #                         family='sans-serif', fontsize=10, color='darkslategrey')
     
-            # Define the limits, labels, ticks as required
             ax1.grid(True)
             ax1.set_xlim([-10,30])
             ax1.set_ylim([0,250])
-            #ax1.set_xlabel(r' ') # Force this empty !
-            ax1.set_xticks(np.linspace(-10,30,5)) # Force this to what I want - for consistency with histogram below !
-            ax1.set_yticks(np.linspace(0,250,6)) # Force this to what I want - for consistency with histogram below !
+            ax1.set_xticks(np.linspace(-10,30,5))
+            ax1.set_yticks(np.linspace(0,250,6))
             ax1.xaxis.set_minor_locator(MultipleLocator(1))
             ax1.yaxis.set_minor_locator(MultipleLocator(10))
             ax1.xaxis.grid(True, which='minor')
             ax1.yaxis.grid(True, which='minor')
             ax1.xaxis.grid(color='black', which='major')
             ax1.yaxis.grid(color='black', which='major')
-            #ax1.set_xticklabels([]) # Force this empty !
             ax1.set_ylabel(r'Esfuerzo Principal Mayor, S1 (Mpa)')
             ax1.set_xlabel(r'Esfuerzo Principal Menor, S3 (Mpa)')
     
-            # And now the histogram
-            # Use the gridspec magic to place it
+            # Histograma
             # --------------------------------------------------------
             ax1v = plt.subplot(gs[0,0])
             # --------------------------------------------------------
     
-            # Plot the data
             binwidth = 5
             xymax = max(np.max(np.abs(S3)), np.max(np.abs(S1)))
             lim = (int(xymax/binwidth) + 1)*binwidth
@@ -289,17 +271,13 @@ if uploaded_file is not None:
             ax1v.set_frame_on(True)
             ax1v.patch.set_visible(True)
             
-            # Define the limits, labels, ticks as required
-            ax1v.set_yticks(np.linspace(0,250,6)) # Ensures we have the same ticks as the scatter plot !
-            #ax1v.set_xticklabels([])
+            ax1v.set_yticks(np.linspace(0,250,6))
             ax1v.set_yticklabels([])
             ax1v.set_ylim([0,250])
             ax1v.set_xticks([0, 2, 4, 6, 8, 10, 12])
             ax1v.grid(True)
             ax1v.set_xlabel(r'N° Ensayos UCS')
     
-            # And now the text box
-            # Use the gridspec magic to place it
             # --------------------------------------------------------
             ax2t = plt.subplot(gs[0,4])
             # --------------------------------------------------------
@@ -356,27 +334,19 @@ if uploaded_file is not None:
         print('a: IC (95%):',np.percentile(np_list[:,0], [2.5, 97.5]))     
         print('b: IC (95%):',np.percentile(np_list[:,1], [2.5, 97.5]))
             
-        def filter_hoekplotall_label_ci(a, b, c, d, e, j, h, l, m, z): ### PENDIENTE: INCLUIR PLOT LABEL CON ALLRESULTS
+        def filter_hoekplotall_label_ci(a, b, c, d, e, j, h, l, m, z): ### Con Intervalos de confianza mediante bootstrap
         
-            # First, create the figure
             fig = plt.figure(1, figsize=(15,8))
     
-            # Now, create the gridspec structure, as required
             gs = gridspec.GridSpec(1,5, height_ratios=[1], width_ratios=[0.2,0.2,1,0.02,0.58])
     
-            # 3 rows, 4 columns, each with the required size ratios. 
-            # Also make sure the margins and spacing are apropriate
-    
             gs.update(left=0.05, right=0.95, bottom=0.08, top=0.93, wspace=0.02, hspace=0.03)
-    
-            # First, the scatter plot
-            # Use the gridspec magic to place it
+
             # --------------------------------------------------------
-            ax1 = plt.subplot(gs[0,2]) # place it where it should be.
+            ax1 = plt.subplot(gs[0,2])
             # --------------------------------------------------------
-            
-            # The plot itself
-            ax1.scatter(a, b,color='darkorange',alpha=0.8,label='Esfuerzos (Mpa) - Filter', s = 70)
+
+            ax1.scatter(a, b,color='darkorange',alpha=0.8,label='Esfuerzos (Mpa) - Filtrados', s = 70)
             ax1.scatter(c, d,color='blue',alpha=0.7,label='Esfuerzos (Mpa)', s = 70)
             ax1.plot(s3ficticio,hoekgraph(s3ficticio, *e),'r-',label='Fit: $\sigma_{ci}$=%.0f, $m_i$=%.0f' % tuple(e))
             for i in range(len(np_list)):
@@ -397,30 +367,24 @@ if uploaded_file is not None:
             #                         xytext=(10,-5), textcoords='offset points',
             #                         family='sans-serif', fontsize=10, color='darkslategrey')
     
-            # Define the limits, labels, ticks as required
             ax1.grid(True)
             ax1.set_xlim([-10,30])
             ax1.set_ylim([0,250])
-            #ax1.set_xlabel(r' ') # Force this empty !
-            ax1.set_xticks(np.linspace(-10,30,5)) # Force this to what I want - for consistency with histogram below !
-            ax1.set_yticks(np.linspace(0,250,6)) # Force this to what I want - for consistency with histogram below !
+            ax1.set_xticks(np.linspace(-10,30,5))
+            ax1.set_yticks(np.linspace(0,250,6))
             ax1.xaxis.set_minor_locator(MultipleLocator(1))
             ax1.yaxis.set_minor_locator(MultipleLocator(10))
             ax1.xaxis.grid(True, which='minor')
             ax1.yaxis.grid(True, which='minor')
             ax1.xaxis.grid(color='black', which='major')
             ax1.yaxis.grid(color='black', which='major')
-            #ax1.set_xticklabels([]) # Force this empty !
             ax1.set_ylabel(r'Esfuerzo Principal Mayor, S1 (Mpa)')
             ax1.set_xlabel(r'Esfuerzo Principal Menor, S3 (Mpa)')
     
-            # And now the histogram
-            # Use the gridspec magic to place it
             # --------------------------------------------------------
             ax1v = plt.subplot(gs[0,0])
             # --------------------------------------------------------
     
-            # Plot the data
             binwidth = 5
             xymax = max(np.max(np.abs(S3)), np.max(np.abs(S1)))
             lim = (int(xymax/binwidth) + 1)*binwidth
@@ -432,22 +396,17 @@ if uploaded_file is not None:
             ax1v.set_frame_on(True)
             ax1v.patch.set_visible(True)
             
-            # Define the limits, labels, ticks as required
             ax1v.set_yticks(np.linspace(0,250,6)) # Ensures we have the same ticks as the scatter plot !
-            #ax1v.set_xticklabels([])
             ax1v.set_yticklabels([])
             ax1v.set_ylim([0,250])
             ax1v.set_xticks([0, 2, 4, 6, 8, 10, 12])
             ax1v.grid(True)
             ax1v.set_xlabel(r'N° Ensayos UCS')
     
-            # And now the text box
-            # Use the gridspec magic to place it
             # --------------------------------------------------------
             ax2t = plt.subplot(gs[0,4])
             # --------------------------------------------------------
     
-            # print textstr
             if len(j) > 0:
                 textstr = 'Resultados:\n\nAjuste H-B\n$\sigma_{ci}$=%.0f, $m_i$=%.0f\n\nEstadística UCS (Mpa)'% tuple(e) + '\nMedia=' + str(int(l)) + ' Desv='+ str(int(m))
             else:
@@ -499,7 +458,6 @@ if uploaded_file is not None:
              alldfmirror = pd.DataFrame(data=df_v2.loc[(df_v2[a] == b),df_v2.columns.str.contains('|'.join(mystress))])
              alldf = alldf.reset_index(drop=True)
              indexdataf = pd.DataFrame(data=alldfmirror.index.values,columns = ['index'])
-             #alldf['Filtro'] = True #nuevo 15-12-2019
             
              if len(alldf) > 1: #PARA QUE REALICE LOS AJUSTES (MÁS DE 2 DATOS)
                  
@@ -538,7 +496,6 @@ if uploaded_file is not None:
                      
                      #residuals = S1all - hoekgraph(S3all, *poptall)
                      #ss_res = np.sum(residuals**2)
-                     
     
                      filter_hoekplotall_label(S3f, S1f, S3all, S1all, poptall, filtrohistall, b, meanhist, stdhist, 0)
     
@@ -614,7 +571,6 @@ if uploaded_file is not None:
             plot_function = selectfilterplot
                  
         plot_function('LIT_UG', 'AND', 'SigmaS1')
-
 
 
 
