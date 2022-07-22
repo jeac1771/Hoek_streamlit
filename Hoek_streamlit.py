@@ -101,7 +101,7 @@ if uploaded_file is not None:
         zip(*esfuerzos)
         
     
-    ############## Algoritmo Mohr-Coloumb ###################
+    ############## Algoritmo H-B ###################
     
     
     # definir largo de listas a utilizar
@@ -396,7 +396,7 @@ if uploaded_file is not None:
             ax1v.set_frame_on(True)
             ax1v.patch.set_visible(True)
             
-            ax1v.set_yticks(np.linspace(0,250,6)) # Ensures we have the same ticks as the scatter plot !
+            ax1v.set_yticks(np.linspace(0,250,6))
             ax1v.set_yticklabels([])
             ax1v.set_ylim([0,250])
             ax1v.set_xticks([0, 2, 4, 6, 8, 10, 12])
